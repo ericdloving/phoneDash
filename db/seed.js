@@ -51,14 +51,7 @@ async function createTables() {
 async function createInitialCalls() {
     try {
         console.log("Starting to create calls...");
-        const seedCall = await createCall({
-            date: '03/09/2024 12:57:04 am',
-            direction: 'inbound',
-            source: '5550000001',
-            duration: '0:35',
-            alertTime: '0:09',
-            destination: '555000000A'
-        })
+        const seedCall = await createCall('03/13/2024 12:26:44 am,inbound,4053613825,,4055953100,0:00,2:12,')
         console.log("cic", seedCall)
         console.log("finished createInitialCalls()")
 

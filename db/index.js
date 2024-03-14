@@ -10,29 +10,60 @@ async function getAllCalls() {
     return rows;
 }
 
-async function createCall(details) {
+function parseCSVString(csvString) {
+    const attributes = ["date", "direction", "source", "intermediateDestinations", "destination", "alertTime", "duration", "accountCode"];
+    const values = csvString.split(',');
+    const result = {};
+
+    let intermediateDestinations = '';
+    let isInIntermediateDestinations = false;
+
+    attributes.forEach((attribute, index) => {
+        let value = values[index] || ''; // handle missing values
+        if (value.startsWith('"') && !value.endsWith('"')) {
+            isInIntermediateDestinations = true;
+            intermediateDestinations += value;
+        } else if (isInIntermediateDestinations) {
+            intermediateDestinations += ',' + value;
+            if (value.endsWith('"')) {
+                result[attribute] = intermediateDestinations;
+                isInIntermediateDestinations = false;
+                intermediateDestinations = '';
+            }
+        } else {
+            result[attribute] = value;
+        }
+    });
+
+    return result;
+}
+
+
+
+async function createCall(csvString) {
     try {
-        console.log("createCall received", details);
+        details = parseCSVString(csvString)
+
+        //this prevents seconds from going into the db as minutes.
         if(details.alertTime.length < 6) details.alertTime = '0:'+details.alertTime
         if(details.duration.length < 6) details.duration = '0:' + details.duration
  
-        // Parse and format the date string
+        //saddleback's timestamp is not psql compliant--translate it.
         const formattedDate = convertToPostgresTimestamp(details.date)
+
+        //optional todo -- convert this to $1 $2 notation to reduce sql injection risk
         let queryString = `INSERT INTO calls (date, source, `
         if (details.direction) queryString += 'direction, '
         if (details.intermediaries) queryString += 'intermediaries, '
         queryString += 'destination, alertTime, duration'
-        details.accountCode ? queryString += ', accountCode)' : queryString += ')'
+        details.accountCode ? queryString += ', accountcode)' : queryString += ')'
         queryString += ` VALUES (TIMESTAMP '${formattedDate}', '${details.source}', `
         if (details.direction) queryString += `'${details.direction}', `
         if (details.intermediaries) queryString += `'${details.intermediaries}', `
         queryString += `'${details.destination}', INTERVAL '${details.alertTime}', INTERVAL '${details.duration}'`
         details.accountCode ? queryString += `, '${details.accountCode}')` : queryString += ')' 
-console.log(`XXXX the query string is ${queryString}`)
         const result = await client.query(queryString);
-
-        console.log("the result of createCall is " + result);
-
+        
     } catch (error) {
         throw error;
     }
