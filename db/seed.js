@@ -32,14 +32,14 @@ async function createTables() {
         await client.query(`
         CREATE TABLE calls (
             callID SERIAL PRIMARY KEY,
-            date timestamp[0] NOT NULL,
-            direction varchar[15],
-            source varchar[255] NOT NULL,
-            intermediaries varchar[255],
-            destination varchar[255] NOT NULL,
-            alertTime interval[0],
-            duration interval[0],
-            accountCode varchar[15]
+            date timestamp NOT NULL,
+            direction varchar(15),
+            source varchar(255) NOT NULL,
+            intermediaries varchar(255),
+            destination varchar(255) NOT NULL,
+            alertTime interval,
+            duration interval,
+            accountCode varchar(15)
         );
         `);
         console.log(`finished createTables()`);
@@ -52,7 +52,7 @@ async function createInitialCalls() {
     try {
         console.log("Starting to create calls...");
         const seedCall = await createCall({
-            timestamp: '03/09/2024 12:57:04 am',
+            date: '03/09/2024 12:57:04 am',
             direction: 'inbound',
             source: '5550000001',
             duration: '0:35',

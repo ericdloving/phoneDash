@@ -12,25 +12,32 @@ async function getAllCalls() {
 
 async function createCall(details) {
     try {
-        console.log("createCall received", details)
-        if(!details.timestamp || !details.source || !details.destination) return -1
-        const result = await client.query(`
-        INSERT INTO calls (date, source, direction,intermediaries, destination, alertTime, duration, accountCode) VALUES ($1, $2, $3, $4, $5, $6, $7, $8);
-        `,[
-        details.timestamp,
-        details.source,
-        details.direction || null,
-        details.intermediaries || null,
-        details.alertTime || null,
-        details.duration || null,
-        details.accountCode || null
-        ])
-        console.log("the result of createCall is " + result)
+        console.log("createCall received", details);
+       //if (!details.timestamp || !details.source || !details.destination) return -1;
+
+        // Parse and format the date string
+        const date = new Date(details.timestamp);
+        const formattedDate = date.toISOString()
+        const queryString = `INSERT INTO calls (date, source, `
+        if (details.direction) queryString += 'direction, '
+        if (details.intermediaries) queryString += 'intermediaries, '
+        queryString += 'destination, alertTime, duration'
+        details.accountCode ? queryString += ', accountCode)' : queryString += ')'
+        queryString += ` VALUES (TIMESTAMP ${formattedDate}, ${details.source}, `
+        if (details.direction) queryString += `${details.direction}, `
+        if (details.intermediaries) queryString += `${details.intermediaries}, `
+        queryString += `${details.destination}, ${details.alertTime}, ${details.duration}`
+        details.accountCode ? queryString += `, ${details.accountCode})` : ')' 
+console.log(`XXXX the query string is ${queryString}`)
+        const result = await client.query(queryString);
+
+        console.log("the result of createCall is " + result);
 
     } catch (error) {
         throw error;
     }
 }
+
 
 module.exports = {
     client,
