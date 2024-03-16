@@ -3,7 +3,7 @@ const client = new Client('postgres://localhost:5432/phone-dev');
 
 async function getAllCalls() {
     const { rows } = await client.query(
-        `SELECT callID, date, destination
+        `SELECT *
         FROM calls;
         `);
         
